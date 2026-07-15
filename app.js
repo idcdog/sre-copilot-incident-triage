@@ -807,11 +807,14 @@ const renderCauses = (content, data) => {
 
   for (const cause of data.candidateCauses) {
     const card = createElement("article", "card cause-card");
+    const header = createElement("div", "cause-header");
+    const titleGroup = createElement("div");
     const score = createElement("span", "score", `${Math.round(cause.confidence * 100)}%`);
 
-    card.append(createElement("p", "section-kicker", "Candidate cause"));
-    card.append(createElement("h3", null, cause.label));
-    card.append(score);
+    titleGroup.append(createElement("p", "section-kicker", "Candidate cause"));
+    titleGroup.append(createElement("h3", null, cause.label));
+    header.append(titleGroup, score);
+    card.append(header);
     card.append(createElement("p", "meta", "Supporting evidence"));
     card.append(createList(cause.supportingEvidence));
     card.append(createElement("p", "meta", "Contradicting evidence"));
