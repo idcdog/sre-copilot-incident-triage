@@ -164,7 +164,7 @@ export const scenarios = [
         copy:
           "RCA Synthesizer emits the current best explanation, supporting evidence, contradicting evidence, and data gaps.",
         activeNodes: ["checkout", "inventory", "observability", "approval"],
-        paths: [["inventory", "checkout", "observability", "approval"]],
+        paths: [["inventory", "checkout", "observability", "approval"], ["approval", "checkout"]],
         logEvents: [
           {
             offsetMs: 12800,
@@ -369,6 +369,7 @@ export const scenarios = [
         ...baseStages.evidenceSweep,
         copy:
           "Metrics, Trace, and Log agents compare checkout write latency against synthetic database queue and lock-wait evidence.",
+        activeAgents: ["metrics", "trace", "logs"],
         activeNodes: ["checkout", "db", "observability", "cache"],
         paths: [
           ["observability", "checkout", "db"],
@@ -436,7 +437,7 @@ export const scenarios = [
         copy:
           "RCA Synthesizer emits a database-saturation brief with explicit missing capacity and query-plan evidence.",
         activeNodes: ["checkout", "db", "observability", "approval"],
-        paths: [["checkout", "db", "observability", "approval"]],
+        paths: [["checkout", "db", "observability", "approval"], ["approval", "db"]],
         logEvents: [
           {
             offsetMs: 12600,
@@ -632,10 +633,12 @@ export const scenarios = [
         ...baseStages.evidenceSweep,
         copy:
           "Metrics, Trace, Log, and Change agents compare publish rate, consumer lag, worker retries, and recent worker config.",
+        activeAgents: ["metrics", "logs", "trace", "change"],
         activeNodes: ["checkout", "queue", "worker", "observability", "change"],
         paths: [
           ["observability", "queue", "worker"],
           ["observability", "checkout", "queue"],
+          ["observability", "worker"],
           ["change", "worker"]
         ],
         logEvents: [
@@ -706,7 +709,7 @@ export const scenarios = [
         copy:
           "RCA Synthesizer emits a queue-backlog brief with safe checks and approval-gated mitigation options.",
         activeNodes: ["checkout", "queue", "worker", "observability", "approval"],
-        paths: [["checkout", "queue", "worker", "observability", "approval"]],
+        paths: [["checkout", "queue", "worker", "observability", "approval"], ["approval", "worker"]],
         logEvents: [
           {
             offsetMs: 12500,

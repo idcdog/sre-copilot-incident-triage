@@ -758,14 +758,17 @@ const initializeTopology = () => {
     group.rotation.y = Math.sin(elapsed * 0.22) * 0.07;
     group.rotation.x = Math.sin(elapsed * 0.17) * 0.035;
 
-    probes.forEach((probe, index) => {
-      const path = stageConfig.paths[index % stageConfig.paths.length];
-      const isAgentActive = stageConfig.activeAgents.includes(probe.userData.agent.id);
-      probe.visible = isAgentActive || stageConfig.mode === "parallel";
-      probe.material.opacity = isAgentActive ? 1 : 0.22;
+    probes.forEach((probe) => {
+      const activeAgentIndex = stageConfig.activeAgents.indexOf(probe.userData.agent.id);
+      const isAgentActive = activeAgentIndex !== -1;
+      probe.visible = isAgentActive;
+      if (!isAgentActive) return;
+
+      const path = stageConfig.paths[activeAgentIndex % stageConfig.paths.length];
+      probe.material.opacity = 1;
       const progress = elapsed * (stageConfig.mode === "parallel" ? 0.28 : 0.18) + probe.userData.offset;
       probe.position.copy(resolvePathPosition(path, progress));
-      probe.scale.setScalar(isAgentActive ? 1.5 + Math.sin(elapsed * 4) * 0.18 : 0.78);
+      probe.scale.setScalar(1.5 + Math.sin(elapsed * 4) * 0.18);
     });
 
     for (const child of group.children) {
