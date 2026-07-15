@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SRE Copilot: Evidence-Driven Incident Triage</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">OpenAI Build Week · Public-safe demo</p>
+        <h1>SRE Copilot for evidence-driven incident triage</h1>
+        <p class="lede">
+          A mock AI workflow that converts alerts, logs, traces, metrics, and
+          change history into an auditable incident brief, candidate RCA
+          hypotheses, data gaps, and human-approved next steps.
+        </p>
+      </section>
+
+      <section class="layout">
+        <aside class="panel">
+          <h2>Incident</h2>
+          <dl id="incident-summary" class="summary"></dl>
+          <div class="notice">
+            This demo uses synthetic data only. No internal system names,
+            screenshots, logs, metrics, or company material are included.
+          </div>
+        </aside>
+
+        <section class="workspace">
+          <nav class="tabs" aria-label="Demo sections">
+            <button class="tab active" data-tab="evidence">Evidence</button>
+            <button class="tab" data-tab="causes">Candidate causes</button>
+            <button class="tab" data-tab="gaps">Data gaps</button>
+            <button class="tab" data-tab="safety">Safety boundary</button>
+          </nav>
+
+          <div id="content" class="content" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+
