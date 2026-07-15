@@ -134,6 +134,51 @@
             </div>
           </aside>
         </div>
+
+        <div class="simulation-grid" aria-label="RCA simulation outputs">
+          <section class="simulation-card" data-agent-readable="true">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Simulation control</p>
+                <h3>One-click RCA demo run</h3>
+              </div>
+              <button id="run-simulation" class="primary-action compact" type="button">
+                Run incident simulation
+              </button>
+            </div>
+            <p id="simulation-status" class="meta">
+              Idle · scripted simulation · synthetic data · no live LLM or production tools.
+            </p>
+            <div id="agent-log" class="agent-log" aria-live="polite"></div>
+          </section>
+
+          <section class="simulation-card">
+            <p class="section-kicker">Confidence model</p>
+            <h3 id="confidence-title">Evidence confidence</h3>
+            <div class="confidence-meter">
+              <strong id="confidence-score">--</strong>
+              <span>final confidence · capped below 100%</span>
+            </div>
+            <div id="confidence-factors" class="confidence-factors"></div>
+          </section>
+
+          <section class="simulation-card">
+            <p class="section-kicker">Approval boundary</p>
+            <h3>Allowed checks vs blocked actions</h3>
+            <div id="approval-boundary" class="approval-boundary"></div>
+          </section>
+
+          <section class="simulation-card report-card">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Generated RCA brief</p>
+                <h3>Copyable incident handoff</h3>
+              </div>
+              <button id="copy-brief" class="text-control" type="button">Copy brief</button>
+            </div>
+            <textarea id="rca-brief" class="brief-output" readonly></textarea>
+          </section>
+        </div>
       </section>
 
       <section id="blueprint" class="section blueprint-section" data-section="blueprint">
@@ -225,7 +270,7 @@
 
       <footer class="footer">
         <span>SRE Copilot · Interactive architecture demo</span>
-        <span>Sanitized · Local data · Zero external dependencies</span>
+        <span>Sanitized · Local scenario data · Three.js CDN</span>
       </footer>
     </main>
 

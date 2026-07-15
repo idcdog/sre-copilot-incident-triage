@@ -1,10 +1,15 @@
 import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+import { defaultScenarioId, scenarios } from "./data/scenarios.js";
 
 const state = {
   data: null,
+  activeScenario:
+    scenarios.find((scenario) => scenario.id === defaultScenarioId) ?? scenarios[0],
   tab: "evidence",
   selectedNode: "control",
   activeStage: 0,
+  agentLog: [],
+  simulationStatus: "idle",
   autoplay: true,
   autoplayTimer: null,
   reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -58,54 +63,6 @@ const agents = [
   { id: "change", label: "Change Agent", color: "#c7b9ff", stage: "parallel" },
   { id: "policy", label: "Policy Agent", color: "#ffcf70", stage: "gate" },
   { id: "synth", label: "RCA Synthesizer", color: "#d7ffe7", stage: "serial" }
-];
-
-const rcaStages = [
-  {
-    title: "01 · Alert intake",
-    mode: "serial",
-    copy: "Domain Router receives a synthetic latency alert and scopes the investigation to checkout-api-demo.",
-    activeNodes: ["gateway", "checkout"],
-    activeAgents: ["router"],
-    paths: [["users", "cdn", "waf", "gateway", "checkout"]]
-  },
-  {
-    title: "02 · Parallel evidence sweep",
-    mode: "parallel",
-    copy: "Metrics, Trace, Log, and Change agents fan out in parallel across observability, service, and change-log surfaces.",
-    activeNodes: ["checkout", "inventory", "observability", "change", "cache", "db"],
-    activeAgents: ["metrics", "trace", "logs", "change"],
-    paths: [
-      ["observability", "checkout", "inventory"],
-      ["observability", "checkout", "cache"],
-      ["observability", "checkout", "db"],
-      ["change", "checkout", "inventory"]
-    ]
-  },
-  {
-    title: "03 · Correlate suspect path",
-    mode: "serial",
-    copy: "Evidence converges on checkout-to-inventory calls after a synthetic pool-limit change.",
-    activeNodes: ["change", "checkout", "inventory", "observability"],
-    activeAgents: ["synth"],
-    paths: [["change", "checkout", "inventory", "observability"]]
-  },
-  {
-    title: "04 · Approval boundary",
-    mode: "gate",
-    copy: "Policy Agent blocks rollback, restart, and config changes until a human approves the action.",
-    activeNodes: ["checkout", "approval"],
-    activeAgents: ["policy"],
-    paths: [["approval", "checkout"]]
-  },
-  {
-    title: "05 · RCA handoff",
-    mode: "serial",
-    copy: "RCA Synthesizer emits the current best explanation, supporting evidence, contradicting evidence, and data gaps.",
-    activeNodes: ["checkout", "inventory", "observability", "approval"],
-    activeAgents: ["synth", "policy"],
-    paths: [["inventory", "checkout", "observability", "approval"]]
-  }
 ];
 
 const blueprintNodes = [
@@ -197,6 +154,74 @@ const createCard = (title, body, meta) => {
   return card;
 };
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getStages = () => state.activeScenario.stages;
+
+const getAgentLabel = (agentId) => agents.find((agent) => agent.id === agentId)?.label ?? agentId;
+
+const calculateConfidence = (scenario) => {
+  const { baseline, cap, factors } = scenario.confidenceModel;
+  return clamp(
+    baseline + factors.reduce((sum, factor) => sum + factor.value, 0),
+    0,
+    cap
+  );
+};
+
+const formatTimestamp = (offsetMs) => {
+  const seconds = Math.floor(offsetMs / 1000);
+  return `00:${String(seconds).padStart(2, "0")}`;
+};
+
+const buildRcaBrief = (scenario) => {
+  const confidence = calculateConfidence(scenario);
+  const evidenceLines = Object.entries(scenario.evidence)
+    .flatMap(([group, records]) => records.map((record) => `- ${formatKey(group)}: ${Object.values(record).join(" · ")}`))
+    .join("\n");
+
+  return `# RCA Brief: ${scenario.incident.title}
+
+Synthetic/read-only demo. No live LLM, no production tools, no real customer data.
+
+## Incident
+
+- ID: ${scenario.incident.id}
+- Severity: ${scenario.incident.severity}
+- Service: ${scenario.incident.service}
+- Environment: ${scenario.incident.environment}
+- Started: ${scenario.incident.startedAt}
+
+${scenario.incident.summary}
+
+## Current best explanation
+
+${scenario.rca.candidateRootCause}
+
+## Confidence
+
+${confidence}% confidence, capped below 100% because data gaps are preserved.
+
+${scenario.confidenceModel.factors.map((factor) => `- ${factor.label}: ${factor.value > 0 ? "+" : ""}${factor.value}`).join("\n")}
+
+## Evidence used
+
+${evidenceLines}
+
+## Data gaps
+
+${scenario.dataGaps.map((gap) => `- ${gap}`).join("\n")}
+
+## Safe next checks
+
+${scenario.rca.safeNextChecks.map((check) => `- ${check}`).join("\n")}
+
+## Approval-required actions
+
+${scenario.rca.approvalRequiredActions.map((action) => `- ${action}`).join("\n")}
+`;
+};
+
 const renderSummary = (incident) => {
   document.querySelector("#incident-title").textContent = incident.title;
   const summary = document.querySelector("#incident-summary");
@@ -211,14 +236,9 @@ const renderSummary = (incident) => {
 };
 
 const renderHeroStats = (data) => {
-  const topCause = data.candidateCauses.reduce((best, cause) =>
-    cause.confidence > best.confidence ? cause : best
-  );
-  document.querySelector("#hero-confidence").textContent = `${Math.round(
-    topCause.confidence * 100
-  )}`;
+  document.querySelector("#hero-confidence").textContent = `${calculateConfidence(data)}`;
   document.querySelector("#signal-count").textContent = `${
-    Object.keys(data.signals).length
+    Object.keys(data.evidence).length
   } active`;
 };
 
@@ -257,7 +277,8 @@ const renderBlueprint = () => {
 const renderMissionPanels = () => {
   const roster = document.querySelector("#agent-roster");
   const timeline = document.querySelector("#stage-timeline");
-  const activeStage = rcaStages[state.activeStage];
+  const stages = getStages();
+  const activeStage = stages[state.activeStage];
   roster.replaceChildren();
   timeline.replaceChildren();
 
@@ -273,7 +294,7 @@ const renderMissionPanels = () => {
     roster.append(card);
   }
 
-  rcaStages.forEach((stage, index) => {
+  stages.forEach((stage, index) => {
     const button = createElement("button", "stage-step");
     button.type = "button";
     button.id = `stage-${index + 1}`;
@@ -300,7 +321,7 @@ const renderMissionPanels = () => {
       if (!keys.includes(event.key)) return;
 
       event.preventDefault();
-      const lastIndex = rcaStages.length - 1;
+      const lastIndex = stages.length - 1;
       let nextIndex = index;
       if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = index === lastIndex ? 0 : index + 1;
       if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = index === 0 ? lastIndex : index - 1;
@@ -319,6 +340,87 @@ const renderMissionPanels = () => {
   document.querySelector("#active-stage-copy").textContent = activeStage.copy;
 };
 
+const renderSimulationOutputs = () => {
+  const scenario = state.activeScenario;
+  const status = document.querySelector("#simulation-status");
+  const log = document.querySelector("#agent-log");
+  const score = document.querySelector("#confidence-score");
+  const factors = document.querySelector("#confidence-factors");
+  const boundary = document.querySelector("#approval-boundary");
+  const brief = document.querySelector("#rca-brief");
+
+  status.textContent = `${formatKey(state.simulationStatus)} · scripted simulation · synthetic data · no live LLM or production tools.`;
+
+  log.replaceChildren();
+  const logList = createElement("ol", "agent-log-list");
+  for (const event of state.agentLog) {
+    const row = createElement("li", `agent-log-entry ${event.risk === "approval-required" ? "blocked" : "allowed"}`);
+    row.dataset.agentId = event.agentId;
+    row.dataset.stageId = event.stageId;
+    row.append(createElement("span", "log-time", event.time));
+    row.append(createElement("strong", null, getAgentLabel(event.agentId)));
+    row.append(createElement("span", "log-risk", event.risk === "approval-required" ? "Blocked · approval required" : "Allowed · read-only"));
+    row.append(createElement("p", null, event.message));
+    logList.append(row);
+  }
+  log.append(logList);
+
+  score.textContent = `${calculateConfidence(scenario)}%`;
+  factors.replaceChildren();
+  for (const factor of scenario.confidenceModel.factors) {
+    const row = createElement("div", `factor-row ${factor.value < 0 ? "negative" : "positive"}`);
+    row.append(createElement("span", null, factor.label));
+    row.append(createElement("strong", null, `${factor.value > 0 ? "+" : ""}${factor.value}`));
+    factors.append(row);
+  }
+
+  boundary.replaceChildren();
+  const allowed = createElement("article", "boundary-list allowed");
+  allowed.append(createElement("h4", null, "Allowed · read-only"));
+  allowed.append(createList(scenario.approvalBoundary.allowedReadOnly));
+  const blocked = createElement("article", "boundary-list blocked");
+  blocked.append(createElement("h4", null, "Blocked · approval required"));
+  blocked.append(createList(scenario.approvalBoundary.blockedProductionActions));
+  boundary.append(allowed, blocked);
+
+  brief.value = buildRcaBrief(scenario);
+};
+
+const runSimulation = () => {
+  if (state.simulationStatus === "running") return;
+
+  setAutoplay(false);
+  state.simulationStatus = "running";
+  state.activeStage = 0;
+  state.agentLog = [];
+  renderMissionPanels();
+  renderSimulationOutputs();
+  window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: state.activeStage } }));
+
+  const stages = getStages();
+  const stageDelayMs = state.reducedMotion ? 220 : 2300;
+  stages.forEach((stage, index) => {
+    window.setTimeout(() => {
+      state.activeStage = index;
+      for (const event of stage.logEvents) {
+        state.agentLog.push({
+          ...event,
+          stageId: stage.id,
+          time: formatTimestamp(event.offsetMs)
+        });
+      }
+      renderMissionPanels();
+      renderSimulationOutputs();
+      window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index } }));
+    }, index * stageDelayMs);
+  });
+
+  window.setTimeout(() => {
+    state.simulationStatus = "complete";
+    renderSimulationOutputs();
+  }, stages.length * stageDelayMs + 120);
+};
+
 const startMissionAutoplay = () => {
   setAutoplay(!state.reducedMotion);
   const toggle = document.querySelector("#mission-play-toggle");
@@ -330,7 +432,7 @@ const startMissionAutoplay = () => {
 
   state.autoplayTimer = window.setInterval(() => {
     if (!state.autoplay) return;
-    state.activeStage = (state.activeStage + 1) % rcaStages.length;
+    state.activeStage = (state.activeStage + 1) % getStages().length;
     renderMissionPanels();
     window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: state.activeStage } }));
   }, 5200);
@@ -459,7 +561,7 @@ const initializeTopology = () => {
 
   const setActiveStage = (index) => {
     state.activeStage = index;
-    const stageConfig = rcaStages[index];
+    const stageConfig = getStages()[index];
     const activeEdges = new Set();
 
     for (const path of stageConfig.paths) {
@@ -494,7 +596,7 @@ const initializeTopology = () => {
 
   const animate = () => {
     const elapsed = clock.getElapsedTime();
-    const stageConfig = rcaStages[state.activeStage];
+    const stageConfig = getStages()[state.activeStage];
     group.rotation.y = Math.sin(elapsed * 0.22) * 0.07;
     group.rotation.x = Math.sin(elapsed * 0.17) * 0.035;
 
@@ -510,7 +612,7 @@ const initializeTopology = () => {
 
     for (const child of group.children) {
       if (child.userData?.isRing) {
-        const active = rcaStages[state.activeStage].activeNodes.includes(child.userData.nodeId);
+        const active = getStages()[state.activeStage].activeNodes.includes(child.userData.nodeId);
         child.rotation.z += active ? 0.014 : 0.004;
         child.material.opacity = active ? 0.34 + Math.sin(elapsed * 3) * 0.08 : 0.1;
       }
@@ -527,7 +629,7 @@ const initializeTopology = () => {
 const renderEvidence = (content, data) => {
   const grid = createElement("div", "card-grid");
 
-  for (const [groupName, records] of Object.entries(data.signals)) {
+  for (const [groupName, records] of Object.entries(data.evidence)) {
     const lines = records.map((record) =>
       Object.entries(record)
         .map(([key, value]) => `${formatKey(key)}: ${value}`)
@@ -610,15 +712,30 @@ const render = () => {
 };
 
 const initialize = async () => {
-  const response = await fetch("data/mock-incident.json");
-  state.data = await response.json();
+  state.data = state.activeScenario;
   renderSummary(state.data.incident);
   renderHeroStats(state.data);
   renderMissionPanels();
+  renderSimulationOutputs();
   initializeTopology();
   startMissionAutoplay();
   renderBlueprint();
   render();
+
+  document.querySelector("#run-simulation")?.addEventListener("click", runSimulation);
+  document.querySelector("#copy-brief")?.addEventListener("click", async () => {
+    const brief = document.querySelector("#rca-brief");
+    brief.select();
+    try {
+      await navigator.clipboard.writeText(brief.value);
+      document.querySelector("#copy-brief").textContent = "Copied";
+      window.setTimeout(() => {
+        document.querySelector("#copy-brief").textContent = "Copy brief";
+      }, 1400);
+    } catch {
+      document.execCommand("copy");
+    }
+  });
 
   for (const tab of document.querySelectorAll(".tab")) {
     tab.addEventListener("click", () => {

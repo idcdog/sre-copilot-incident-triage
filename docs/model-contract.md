@@ -15,7 +15,7 @@ This project treats model output as structured evidence, not as an autonomous co
     "startedAt": "2026-07-15T02:14:00Z",
     "summary": "Synthetic incident summary"
   },
-  "signals": {
+  "evidence": {
     "alerts": [],
     "logs": [],
     "traces": [],
@@ -55,4 +55,3 @@ This project treats model output as structured evidence, not as an autonomous co
 ## Why structured output matters
 
 Incident response is operationally sensitive. Free-form prose is useful for humans, but automation needs predictable fields that can be validated, audited, and replayed. The model contract gives the control plane a stable boundary around model reasoning.
-

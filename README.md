@@ -17,8 +17,8 @@ It intentionally excludes:
 
 ## What is included
 
-- A dependency-free browser demo in `index.html`.
-- Synthetic incident evidence in `data/mock-incident.json`.
+- A static browser demo in `index.html`.
+- Synthetic RCA scenario data in `data/scenarios.js`.
 - A Devpost draft in `docs/devpost-draft.md`.
 - A sanitization checklist in `docs/sanitization.md`.
 - Architecture notes in `docs/architecture.md`.
@@ -83,7 +83,7 @@ This public repository keeps the model adapter mocked so the project can be revi
 ```text
 .
 ├── app.js
-├── data/mock-incident.json
+├── data/scenarios.js
 ├── docs/
 │   ├── architecture.md
 │   ├── devpost-draft.md

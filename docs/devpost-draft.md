@@ -26,7 +26,7 @@ The demo takes a synthetic incident bundle and produces:
 
 ## How we built it
 
-This public demo is a dependency-free static web app using HTML, CSS, JavaScript, and a synthetic JSON evidence bundle.
+This public demo is a static web app using HTML, CSS, JavaScript, a Three.js CDN import for the topology animation, and a synthetic JavaScript scenario bundle.
 
 The RCA topology uses Three.js from a public CDN for the animated mission-control view. If it cannot load, the static agent timeline still explains the workflow.
 

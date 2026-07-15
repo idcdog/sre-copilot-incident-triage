@@ -15,7 +15,7 @@ Inputs are normalized into a small incident bundle:
 - recent changes;
 - known data gaps.
 
-The public demo uses `data/mock-incident.json`. Every record is synthetic.
+The public demo uses `data/scenarios.js`. Every record is synthetic and versioned with the deterministic scenario schema.
 
 ### 2. Evidence control plane
 
@@ -71,4 +71,3 @@ This repository does not include:
 - internal screenshots;
 - private system names;
 - organization-specific operating metrics.
-
