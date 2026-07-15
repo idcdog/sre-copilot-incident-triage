@@ -84,6 +84,14 @@
           </p>
         </div>
 
+        <section class="scenario-strip" aria-label="Synthetic incident scenarios">
+          <div>
+            <p class="section-kicker">Scenario selector</p>
+            <h3>Switch the incident, keep the same control plane</h3>
+          </div>
+          <div id="scenario-switcher" class="scenario-switcher"></div>
+        </section>
+
         <div class="mission-layout">
           <section class="topology-stage" aria-label="Animated production topology" data-agent-readable="true">
             <figure class="topology-figure">
@@ -168,6 +176,24 @@
             <div id="approval-boundary" class="approval-boundary"></div>
           </section>
 
+          <section class="simulation-card">
+            <p class="section-kicker">Runbook retrieval mock</p>
+            <h3>Read-only advisory snippets</h3>
+            <p class="meta">
+              Synthetic runbook context is retrieved for realism. It is advisory context, not proof.
+            </p>
+            <div id="runbook-snippets" class="runbook-snippets"></div>
+          </section>
+
+          <section class="simulation-card">
+            <p class="section-kicker">Approval gate interaction</p>
+            <h3>Recommended, not executed</h3>
+            <p class="meta">
+              Blocked actions can generate a local packet. No request is submitted anywhere.
+            </p>
+            <div id="approval-actions" class="approval-actions"></div>
+          </section>
+
           <section class="simulation-card report-card">
             <div class="panel-title-row">
               <div>
@@ -177,6 +203,17 @@
               <button id="copy-brief" class="text-control" type="button">Copy brief</button>
             </div>
             <textarea id="rca-brief" class="brief-output" readonly></textarea>
+          </section>
+
+          <section class="simulation-card report-card">
+            <div class="panel-title-row">
+              <div>
+                <p class="section-kicker">Approval packet</p>
+                <h3>Local-only mitigation request</h3>
+              </div>
+              <button id="copy-approval-packet" class="text-control" type="button">Copy packet</button>
+            </div>
+            <textarea id="approval-packet" class="brief-output" readonly></textarea>
           </section>
         </div>
       </section>

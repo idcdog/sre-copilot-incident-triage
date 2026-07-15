@@ -19,6 +19,7 @@ It intentionally excludes:
 
 - A static browser demo in `index.html`.
 - Synthetic RCA scenario data in `data/scenarios.js`.
+- Synthetic runbook snippets in `data/runbooks.js`.
 - A Devpost draft in `docs/devpost-draft.md`.
 - A sanitization checklist in `docs/sanitization.md`.
 - Architecture notes in `docs/architecture.md`.
@@ -44,6 +45,14 @@ You can also open `index.html` directly in a browser.
 
 The RCA mission-control view loads Three.js from a public CDN for the animated topology. If Three.js is unavailable or the user prefers reduced motion, the page falls back to the static stage timeline and agent panels.
 
+For recording a deterministic Devpost walkthrough, open:
+
+```text
+http://localhost:8000?demo=devpost
+```
+
+That mode jumps to Mission Control, starts the simulation, and hides nonessential sections.
+
 ## Validate public safety
 
 Run:
@@ -54,6 +63,17 @@ npm run validate
 
 The validation checks for blocked file types, common secret patterns, personal email addresses, and accidental inclusion of media or presentation exports.
 
+## Deploy
+
+This repository is designed for GitHub Pages from the repository root. The `.nojekyll` file disables Jekyll processing so the static ES module files are served directly.
+
+Recommended Pages source:
+
+```text
+Branch: main
+Folder: / root
+```
+
 ## Concept
 
 The demo models a read-only triage loop:
@@ -62,9 +82,10 @@ The demo models a read-only triage loop:
 2. Gather evidence from mock logs, metrics, traces, and deployment changes.
 3. Generate candidate causes with supporting and contradicting evidence.
 4. Surface data gaps and cap confidence when evidence is incomplete.
-5. Produce a human-approved next-step plan.
+5. Retrieve synthetic runbook snippets as advisory context.
+6. Produce a copyable RCA brief and a local-only approval packet for blocked actions.
 
-The animated RCA workflow uses a common synthetic production topology: edge, gateway, service, queue, cache, database, observability, change-log, and approval-gate layers. Multiple specialist agents fan out in parallel during evidence collection, then converge into a serial RCA synthesis and approval boundary.
+The animated RCA workflow uses a common synthetic production topology: edge, gateway, service, queue, cache, database, observability, change-log, and approval-gate layers. Multiple specialist agents fan out in parallel during evidence collection, then converge into a serial RCA synthesis and approval boundary. The demo includes three synthetic scenarios: checkout latency, database saturation, and message queue backlog.
 
 ## OpenAI fit
 
@@ -83,7 +104,9 @@ This public repository keeps the model adapter mocked so the project can be revi
 ```text
 .
 ├── app.js
-├── data/scenarios.js
+├── data/
+│   ├── runbooks.js
+│   └── scenarios.js
 ├── docs/
 │   ├── architecture.md
 │   ├── devpost-draft.md

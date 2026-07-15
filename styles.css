@@ -388,6 +388,57 @@ h3 {
   border-bottom: 1px solid var(--line);
 }
 
+.scenario-strip {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14, 33, 29, 0.74), rgba(7, 18, 15, 0.7));
+  padding: 22px;
+}
+
+.scenario-strip h3 {
+  margin-bottom: 0;
+}
+
+.scenario-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.scenario-card {
+  min-height: 132px;
+  border: 1px solid var(--line);
+  background: rgba(4, 10, 9, 0.28);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 16px;
+  text-align: left;
+}
+
+.scenario-card strong,
+.scenario-card span {
+  display: block;
+}
+
+.scenario-card strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.scenario-card span {
+  margin-top: 12px;
+  line-height: 1.55;
+}
+
+.scenario-card.active {
+  border-color: var(--mint);
+  background: linear-gradient(180deg, rgba(35, 72, 61, 0.72), rgba(12, 31, 26, 0.88));
+  box-shadow: inset 0 0 28px rgba(168, 240, 198, 0.08);
+}
+
 .mission-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.65fr);
@@ -776,6 +827,56 @@ h3 {
   color: var(--danger);
 }
 
+.runbook-snippets,
+.approval-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.runbook-card,
+.approval-action {
+  border: 1px solid var(--line);
+  background: rgba(4, 10, 9, 0.34);
+  padding: 16px;
+}
+
+.runbook-card h4,
+.approval-action h4 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.runbook-card p,
+.approval-action p {
+  margin: 0;
+  color: #bdcbc7;
+  line-height: 1.55;
+}
+
+.approval-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.approval-action .text-control {
+  color: var(--danger);
+}
+
+.devpost-mode .jump-nav,
+.devpost-mode .blueprint-section,
+.devpost-mode .replay-section {
+  display: none;
+}
+
+.devpost-mode .hero {
+  min-height: auto;
+  padding: 54px 0;
+}
+
 .brief-output {
   width: 100%;
   min-height: 260px;
@@ -1038,6 +1139,7 @@ h3 {
   .topbar,
   .hero,
   .section-head,
+  .scenario-strip,
   .blueprint-layout,
   .replay-layout,
   .mission-layout,
@@ -1078,6 +1180,7 @@ h3 {
 
   .tabs,
   .node-map,
+  .scenario-switcher,
   .card-grid {
     grid-template-columns: 1fr;
   }
@@ -1089,6 +1192,10 @@ h3 {
   .panel-title-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .approval-action {
+    grid-template-columns: 1fr;
   }
 
   .tab {

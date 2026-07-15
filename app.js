@@ -1,5 +1,6 @@
 import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
 import { defaultScenarioId, scenarios } from "./data/scenarios.js";
+import { runbooks } from "./data/runbooks.js";
 
 const state = {
   data: null,
@@ -9,10 +10,13 @@ const state = {
   selectedNode: "control",
   activeStage: 0,
   agentLog: [],
+  approvalPacket: "",
   simulationStatus: "idle",
+  simulationTimers: [],
   autoplay: true,
   autoplayTimer: null,
-  reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  devpostMode: new URLSearchParams(window.location.search).get("demo") === "devpost"
 };
 
 const topologyNodes = [
@@ -160,6 +164,12 @@ const getStages = () => state.activeScenario.stages;
 
 const getAgentLabel = (agentId) => agents.find((agent) => agent.id === agentId)?.label ?? agentId;
 
+const getRunbookMatches = (scenario) =>
+  scenario.runbookMatches
+    .map((id) => runbooks.find((runbook) => runbook.id === id))
+    .filter(Boolean)
+    .slice(0, 2);
+
 const calculateConfidence = (scenario) => {
   const { baseline, cap, factors } = scenario.confidenceModel;
   return clamp(
@@ -174,10 +184,41 @@ const formatTimestamp = (offsetMs) => {
   return `00:${String(seconds).padStart(2, "0")}`;
 };
 
+const clearSimulationTimers = () => {
+  for (const timer of state.simulationTimers) window.clearTimeout(timer);
+  state.simulationTimers = [];
+};
+
+const resetScenarioState = () => {
+  clearSimulationTimers();
+  state.data = state.activeScenario;
+  state.activeStage = 0;
+  state.agentLog = [];
+  state.approvalPacket = "";
+  state.simulationStatus = "idle";
+};
+
+const syncScenarioUi = () => {
+  renderSummary(state.data.incident);
+  renderHeroStats(state.data);
+  renderMissionPanels();
+  renderSimulationOutputs();
+  render();
+  window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: state.activeStage } }));
+};
+
 const buildRcaBrief = (scenario) => {
   const confidence = calculateConfidence(scenario);
   const evidenceLines = Object.entries(scenario.evidence)
     .flatMap(([group, records]) => records.map((record) => `- ${formatKey(group)}: ${Object.values(record).join(" · ")}`))
+    .join("\n");
+  const timelineLines = scenario.stages
+    .flatMap((stage) =>
+      stage.logEvents.map((event) => `- [${formatTimestamp(event.offsetMs)}] ${getAgentLabel(event.agentId)}: ${event.message}`)
+    )
+    .join("\n");
+  const runbookLines = getRunbookMatches(scenario)
+    .map((runbook) => `- ${runbook.title}: ${runbook.summary}`)
     .join("\n");
 
   return `# RCA Brief: ${scenario.incident.title}
@@ -208,6 +249,14 @@ ${scenario.confidenceModel.factors.map((factor) => `- ${factor.label}: ${factor.
 
 ${evidenceLines}
 
+## Timeline
+
+${timelineLines}
+
+## Advisory runbook context
+
+${runbookLines || "- No synthetic runbook snippets matched."}
+
 ## Data gaps
 
 ${scenario.dataGaps.map((gap) => `- ${gap}`).join("\n")}
@@ -221,6 +270,42 @@ ${scenario.rca.safeNextChecks.map((check) => `- ${check}`).join("\n")}
 ${scenario.rca.approvalRequiredActions.map((action) => `- ${action}`).join("\n")}
 `;
 };
+
+const buildApprovalPacket = (scenario, action) => `# Approval Packet: ${action.label}
+
+Synthetic/local-only demo. This packet is generated in the browser and is not submitted anywhere.
+
+## Incident
+
+- ${scenario.incident.title}
+- Severity: ${scenario.incident.severity}
+- Service: ${scenario.incident.service}
+- Environment: ${scenario.incident.environment}
+
+## Requested action
+
+${action.label}
+
+## Why recommended
+
+${action.why}
+
+## Evidence references
+
+${action.evidenceRefs.map((item) => `- ${item}`).join("\n")}
+
+## Blast radius
+
+${action.blastRadius}
+
+## Rollback plan
+
+${action.rollbackPlan}
+
+## Approver
+
+${action.approver}
+`;
 
 const renderSummary = (incident) => {
   document.querySelector("#incident-title").textContent = incident.title;
@@ -240,6 +325,32 @@ const renderHeroStats = (data) => {
   document.querySelector("#signal-count").textContent = `${
     Object.keys(data.evidence).length
   } active`;
+};
+
+const renderScenarioSwitcher = () => {
+  const switcher = document.querySelector("#scenario-switcher");
+  if (!switcher) return;
+
+  switcher.replaceChildren();
+  for (const scenario of scenarios) {
+    const button = createElement("button", "scenario-card");
+    const isActive = scenario.id === state.activeScenario.id;
+    button.type = "button";
+    button.dataset.scenarioId = scenario.id;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+    button.append(createElement("strong", null, scenario.shortLabel ?? scenario.title));
+    button.append(createElement("span", null, scenario.incident.summary));
+    button.addEventListener("click", () => {
+      if (scenario.id === state.activeScenario.id) return;
+      setAutoplay(false);
+      state.activeScenario = scenario;
+      resetScenarioState();
+      renderScenarioSwitcher();
+      syncScenarioUi();
+    });
+    switcher.append(button);
+  }
 };
 
 const renderBlueprint = () => {
@@ -312,8 +423,11 @@ const renderMissionPanels = () => {
     button.append(createElement("small", null, stage.mode));
     button.addEventListener("click", () => {
       setAutoplay(false);
+      clearSimulationTimers();
+      state.simulationStatus = "idle";
       state.activeStage = index;
       renderMissionPanels();
+      renderSimulationOutputs();
       window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index } }));
     });
     button.addEventListener("keydown", (event) => {
@@ -328,8 +442,11 @@ const renderMissionPanels = () => {
       if (event.key === "Home") nextIndex = 0;
       if (event.key === "End") nextIndex = lastIndex;
       setAutoplay(false);
+      clearSimulationTimers();
+      state.simulationStatus = "idle";
       state.activeStage = nextIndex;
       renderMissionPanels();
+      renderSimulationOutputs();
       document.querySelector(`#stage-${nextIndex + 1}`)?.focus();
       window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: nextIndex } }));
     });
@@ -347,6 +464,9 @@ const renderSimulationOutputs = () => {
   const score = document.querySelector("#confidence-score");
   const factors = document.querySelector("#confidence-factors");
   const boundary = document.querySelector("#approval-boundary");
+  const runbookPanel = document.querySelector("#runbook-snippets");
+  const approvalActions = document.querySelector("#approval-actions");
+  const approvalPacket = document.querySelector("#approval-packet");
   const brief = document.querySelector("#rca-brief");
 
   status.textContent = `${formatKey(state.simulationStatus)} · scripted simulation · synthetic data · no live LLM or production tools.`;
@@ -383,6 +503,38 @@ const renderSimulationOutputs = () => {
   blocked.append(createList(scenario.approvalBoundary.blockedProductionActions));
   boundary.append(allowed, blocked);
 
+  runbookPanel.replaceChildren();
+  for (const runbook of getRunbookMatches(scenario)) {
+    const card = createElement("article", "runbook-card");
+    card.dataset.runbookId = runbook.id;
+    card.append(createElement("h4", null, runbook.title));
+    card.append(createElement("p", null, runbook.summary));
+    card.append(createList(runbook.checks));
+    runbookPanel.append(card);
+  }
+
+  approvalActions.replaceChildren();
+  for (const action of scenario.approvalActions) {
+    const card = createElement("article", "approval-action");
+    const copy = createElement("div");
+    const button = createElement("button", "text-control", "Request packet");
+    card.dataset.actionId = action.id;
+    copy.append(createElement("h4", null, action.label));
+    copy.append(createElement("p", null, action.why));
+    button.type = "button";
+    button.addEventListener("click", () => {
+      state.approvalPacket = buildApprovalPacket(scenario, action);
+      renderSimulationOutputs();
+      document.querySelector("#approval-packet")?.focus();
+    });
+    card.append(copy, button);
+    approvalActions.append(card);
+  }
+
+  approvalPacket.value =
+    state.approvalPacket ||
+    "Select Request packet for a blocked action. The generated packet stays local and does not execute or submit anything.";
+
   brief.value = buildRcaBrief(scenario);
 };
 
@@ -390,9 +542,11 @@ const runSimulation = () => {
   if (state.simulationStatus === "running") return;
 
   setAutoplay(false);
+  clearSimulationTimers();
   state.simulationStatus = "running";
   state.activeStage = 0;
   state.agentLog = [];
+  state.approvalPacket = "";
   renderMissionPanels();
   renderSimulationOutputs();
   window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: state.activeStage } }));
@@ -400,7 +554,7 @@ const runSimulation = () => {
   const stages = getStages();
   const stageDelayMs = state.reducedMotion ? 220 : 2300;
   stages.forEach((stage, index) => {
-    window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       state.activeStage = index;
       for (const event of stage.logEvents) {
         state.agentLog.push({
@@ -413,12 +567,15 @@ const runSimulation = () => {
       renderSimulationOutputs();
       window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index } }));
     }, index * stageDelayMs);
+    state.simulationTimers.push(timer);
   });
 
-  window.setTimeout(() => {
+  const completeTimer = window.setTimeout(() => {
     state.simulationStatus = "complete";
+    state.simulationTimers = [];
     renderSimulationOutputs();
   }, stages.length * stageDelayMs + 120);
+  state.simulationTimers.push(completeTimer);
 };
 
 const startMissionAutoplay = () => {
@@ -712,7 +869,9 @@ const render = () => {
 };
 
 const initialize = async () => {
+  resetScenarioState();
   state.data = state.activeScenario;
+  renderScenarioSwitcher();
   renderSummary(state.data.incident);
   renderHeroStats(state.data);
   renderMissionPanels();
@@ -731,6 +890,19 @@ const initialize = async () => {
       document.querySelector("#copy-brief").textContent = "Copied";
       window.setTimeout(() => {
         document.querySelector("#copy-brief").textContent = "Copy brief";
+      }, 1400);
+    } catch {
+      document.execCommand("copy");
+    }
+  });
+  document.querySelector("#copy-approval-packet")?.addEventListener("click", async () => {
+    const packet = document.querySelector("#approval-packet");
+    packet.select();
+    try {
+      await navigator.clipboard.writeText(packet.value);
+      document.querySelector("#copy-approval-packet").textContent = "Copied";
+      window.setTimeout(() => {
+        document.querySelector("#copy-approval-packet").textContent = "Copy packet";
       }, 1400);
     } catch {
       document.execCommand("copy");
@@ -759,6 +931,14 @@ const initialize = async () => {
       render();
       tabs[nextIndex].focus();
     });
+  }
+
+  if (state.devpostMode) {
+    document.body.classList.add("devpost-mode");
+    window.setTimeout(() => {
+      document.querySelector("#mission-control")?.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" });
+      runSimulation();
+    }, state.reducedMotion ? 80 : 600);
   }
 };
 

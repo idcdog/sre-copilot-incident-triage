@@ -23,10 +23,13 @@ The demo takes a synthetic incident bundle and produces:
 - a safety boundary that separates read-only assistance from actions requiring human approval.
 - an architecture-style interface showing how the evidence control plane separates model reasoning from deterministic approval policy.
 - a Three.js RCA mission-control view where agents fan out across a synthetic edge, gateway, service, queue, cache, database, observability, and approval-gate topology.
+- three switchable synthetic scenarios: checkout latency, database saturation, and message queue backlog.
+- synthetic runbook snippets used as advisory context.
+- a local-only approval packet generator for blocked mitigation actions.
 
 ## How we built it
 
-This public demo is a static web app using HTML, CSS, JavaScript, a Three.js CDN import for the topology animation, and a synthetic JavaScript scenario bundle.
+This public demo is a static web app using HTML, CSS, JavaScript, a Three.js CDN import for the topology animation, synthetic JavaScript scenario data, and synthetic runbook snippets.
 
 The RCA topology uses Three.js from a public CDN for the animated mission-control view. If it cannot load, the static agent timeline still explains the workflow.
 
@@ -55,13 +58,16 @@ The main challenge is not generating text. It is keeping the workflow auditable,
 - No dependency on internal data, screenshots, systems, or credentials.
 - Architecture and model-contract documentation that explain how a real implementation can add OpenAI model calls while preserving approval boundaries.
 - A cinematic topology animation that demonstrates serial intake, parallel evidence collection, RCA synthesis, and approval-gated action.
+- A deterministic Devpost mode at `?demo=devpost` for screen recording.
+- Three incident scenarios that reuse one topology while changing evidence, confidence factors, and RCA output.
+- Copyable RCA brief and approval packet outputs.
 
 ## What is next
 
 - Add a real model adapter behind an environment-variable API key.
 - Add structured output validation for incident evidence packages.
-- Add a mock runbook retrieval layer.
-- Add an approval workflow for recommended mitigations.
+- Add a real retrieval adapter for approved public/demo runbooks.
+- Add a real approval workflow integration behind explicit operator confirmation.
 - Add test fixtures for different incident classes.
 
 ## Submission notes
@@ -71,4 +77,4 @@ Before publishing:
 - verify that all screenshots and videos use only this public-safe demo;
 - do not attach internal presentation files or exports;
 - do not include real company, team, system, incident, metric, or customer names;
-- keep the repository private until final review is complete.
+- publish only the sanitized repository and demo URL.

@@ -17,6 +17,12 @@ Inputs are normalized into a small incident bundle:
 
 The public demo uses `data/scenarios.js`. Every record is synthetic and versioned with the deterministic scenario schema.
 
+The current demo includes three incident classes:
+
+- checkout latency after a synthetic configuration change;
+- database saturation during a synthetic traffic surge;
+- message queue backlog in a synthetic order pipeline.
+
 ### 2. Evidence control plane
 
 The control plane is responsible for deterministic behavior that should not be delegated to a language model:
@@ -27,6 +33,7 @@ The control plane is responsible for deterministic behavior that should not be d
 - evidence provenance;
 - confidence caps;
 - replayable incident notes.
+- local-only approval packets for blocked actions.
 
 ### 3. Reasoning adapter
 
@@ -50,6 +57,8 @@ Tools are grouped by risk:
 
 The assistant can recommend approval-gated actions but should not execute them by default.
 
+The public demo also includes `data/runbooks.js`, a synthetic read-only retrieval layer. Runbook snippets are advisory context only and are not treated as proof.
+
 ### 5. Closure loop
 
 The output is designed to be useful during and after an incident:
@@ -60,6 +69,8 @@ The output is designed to be useful during and after an incident:
 - contradicting evidence;
 - follow-up checks;
 - human approval boundary.
+- copyable RCA brief;
+- copyable local-only approval packet.
 
 ## Public demo boundary
 

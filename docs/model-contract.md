@@ -17,9 +17,15 @@ This project treats model output as structured evidence, not as an autonomous co
   },
   "evidence": {
     "alerts": [],
+    "metrics": [],
     "logs": [],
     "traces": [],
     "changes": []
+  },
+  "runbookMatches": ["synthetic-runbook-id"],
+  "approvalBoundary": {
+    "allowedReadOnly": [],
+    "blockedProductionActions": []
   }
 }
 ```
@@ -39,7 +45,13 @@ This project treats model output as structured evidence, not as an autonomous co
   ],
   "dataGaps": ["Missing signal"],
   "safeNextChecks": ["Read-only follow-up check"],
-  "approvalRequired": ["Production-changing operation"]
+  "approvalRequired": ["Production-changing operation"],
+  "approvalPacket": {
+    "action": "Blocked action label",
+    "whyRecommended": "Evidence-backed explanation",
+    "blastRadius": "Expected impact scope",
+    "rollbackPlan": "Operator-reviewed rollback plan"
+  }
 }
 ```
 
@@ -50,6 +62,8 @@ This project treats model output as structured evidence, not as an autonomous co
 - Contradicting evidence should be preserved instead of hidden.
 - Write actions must be separated from read-only checks.
 - Production-changing actions require explicit human approval.
+- Approval packets are local-only drafts and must not submit or execute actions.
+- Runbook snippets are advisory context, not evidence by themselves.
 - The model should not invent telemetry, tickets, users, services, or metrics.
 
 ## Why structured output matters
