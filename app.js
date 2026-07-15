@@ -16,7 +16,8 @@ const state = {
   autoplay: true,
   autoplayTimer: null,
   reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  devpostMode: new URLSearchParams(window.location.search).get("demo") === "devpost"
+  devpostMode: new URLSearchParams(window.location.search).get("demo") === "devpost",
+  hasInitialHash: window.location.hash.length > 0
 };
 
 const topologyNodes = [
@@ -933,7 +934,7 @@ const initialize = async () => {
     });
   }
 
-  if (state.devpostMode) {
+  if (state.devpostMode && !state.hasInitialHash) {
     document.body.classList.add("devpost-mode");
     window.setTimeout(() => {
       document.querySelector("#mission-control")?.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" });

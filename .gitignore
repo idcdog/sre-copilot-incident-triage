@@ -2,6 +2,7 @@
 node_modules/
 dist/
 build/
+demo-media/
 .env
 .env.*
 *.log
@@ -16,4 +17,3 @@ build/
 *.jpeg
 *.mov
 *.mp4
-

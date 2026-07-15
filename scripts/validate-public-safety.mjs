@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
+const ignoredDirectories = new Set([".git", "demo-media", "node_modules"]);
 
 const blockedExtensions = new Set([
   ".ppt",
@@ -53,7 +54,7 @@ async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
 
   for (const entry of entries) {
-    if (entry.name === ".git" || entry.name === "node_modules") continue;
+    if (ignoredDirectories.has(entry.name)) continue;
 
     const filePath = path.join(directory, entry.name);
 
