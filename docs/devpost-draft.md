@@ -22,10 +22,13 @@ The demo takes a synthetic incident bundle and produces:
 - confidence-limiting data gaps;
 - a safety boundary that separates read-only assistance from actions requiring human approval.
 - an architecture-style interface showing how the evidence control plane separates model reasoning from deterministic approval policy.
+- a Three.js RCA mission-control view where agents fan out across a synthetic edge, gateway, service, queue, cache, database, observability, and approval-gate topology.
 
 ## How we built it
 
 This public demo is a dependency-free static web app using HTML, CSS, JavaScript, and a synthetic JSON evidence bundle.
+
+The RCA topology uses Three.js from a public CDN for the animated mission-control view. If it cannot load, the static agent timeline still explains the workflow.
 
 The full product direction is intended to use OpenAI models for evidence clustering, incident summarization, runbook retrieval, RCA drafting, and Codex-assisted integration work. The public repository keeps model calls mocked so reviewers do not need private credentials or infrastructure access.
 
@@ -51,6 +54,7 @@ The main challenge is not generating text. It is keeping the workflow auditable,
 - Sanitized Devpost-ready project narrative.
 - No dependency on internal data, screenshots, systems, or credentials.
 - Architecture and model-contract documentation that explain how a real implementation can add OpenAI model calls while preserving approval boundaries.
+- A cinematic topology animation that demonstrates serial intake, parallel evidence collection, RCA synthesis, and approval-gated action.
 
 ## What is next
 

@@ -97,7 +97,10 @@ button {
 .node-index,
 .radar small,
 .radar-stats dt,
-.radar-stats dd {
+.radar-stats dd,
+.agent-chip small,
+.stage-step,
+.topology-label {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -340,6 +343,181 @@ h3 {
 .section {
   padding: 92px 0;
   border-bottom: 1px solid var(--line);
+}
+
+.mission-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.65fr);
+  gap: 22px;
+}
+
+.topology-stage {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 52% 48%, rgba(168, 240, 198, 0.12), transparent 24rem),
+    linear-gradient(180deg, rgba(14, 33, 29, 0.88), rgba(5, 12, 10, 0.9));
+}
+
+.topology-stage::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(168, 240, 198, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 240, 198, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at center, black, transparent 76%);
+}
+
+#topology-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.topology-fallback {
+  position: absolute;
+  inset: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 24px;
+  text-align: center;
+}
+
+.topology-fallback[hidden] {
+  display: none;
+}
+
+.stage-overlay {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: min(390px, calc(100% - 48px));
+  border: 1px solid var(--line-strong);
+  background: rgba(5, 14, 12, 0.82);
+  backdrop-filter: blur(10px);
+  padding: 22px;
+}
+
+.stage-overlay .section-kicker {
+  margin-bottom: 14px;
+}
+
+.stage-overlay p:last-child {
+  color: #bdcbc7;
+  line-height: 1.6;
+}
+
+.topology-label {
+  position: absolute;
+  z-index: 2;
+  max-width: 122px;
+  pointer-events: none;
+  color: rgba(240, 245, 244, 0.42);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  text-align: center;
+  text-shadow: 0 0 18px #020705;
+  transform-origin: left top;
+  translate: -50% 18px;
+  transition: color 260ms ease, text-shadow 260ms ease;
+}
+
+.topology-label.active {
+  color: var(--mint);
+  text-shadow: 0 0 20px rgba(168, 240, 198, 0.55);
+}
+
+.mission-panel {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+
+.mission-panel > div,
+.agent-chip,
+.stage-step {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14, 33, 29, 0.88), rgba(8, 20, 17, 0.78));
+}
+
+.mission-panel > div {
+  padding: 22px;
+}
+
+.agent-roster,
+.stage-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-chip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  color: var(--muted);
+}
+
+.agent-chip.active {
+  border-color: color-mix(in srgb, var(--agent-color) 72%, transparent);
+  color: var(--text);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--agent-color) 9%, transparent);
+}
+
+.agent-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--agent-color);
+  box-shadow: 0 0 16px var(--agent-color);
+}
+
+.agent-chip strong {
+  font-size: 0.86rem;
+}
+
+.agent-chip small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+}
+
+.stage-step {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  min-height: 54px;
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+}
+
+.stage-step.active {
+  border-color: var(--mint);
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(35, 72, 61, 0.86), rgba(12, 31, 26, 0.9));
+}
+
+.stage-step span {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+
+.stage-step small {
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 0.58rem;
 }
 
 .section-head {
@@ -588,7 +766,8 @@ h3 {
   .hero,
   .section-head,
   .blueprint-layout,
-  .replay-layout {
+  .replay-layout,
+  .mission-layout {
     grid-template-columns: 1fr;
   }
 
@@ -624,6 +803,10 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .topology-stage {
+    min-height: 520px;
+  }
+
   .tab {
     border-right: 0;
     border-bottom: 1px solid var(--line);
@@ -631,6 +814,17 @@ h3 {
 
   .tab:last-child {
     border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -654,4 +848,3 @@ h3 {
     gap: 6px;
   }
 }
-

@@ -24,6 +24,7 @@ It intentionally excludes:
 - Architecture notes in `docs/architecture.md`.
 - A model-output contract in `docs/model-contract.md`.
 - A local public-safety validation script in `scripts/validate-public-safety.mjs`.
+- A Three.js RCA mission-control topology showing serial and parallel agent investigation.
 
 ## Run locally
 
@@ -40,6 +41,8 @@ http://localhost:8000
 ```
 
 You can also open `index.html` directly in a browser.
+
+The RCA mission-control view loads Three.js from a public CDN for the animated topology. If Three.js is unavailable or the user prefers reduced motion, the page falls back to the static stage timeline and agent panels.
 
 ## Validate public safety
 
@@ -60,6 +63,8 @@ The demo models a read-only triage loop:
 3. Generate candidate causes with supporting and contradicting evidence.
 4. Surface data gaps and cap confidence when evidence is incomplete.
 5. Produce a human-approved next-step plan.
+
+The animated RCA workflow uses a common synthetic production topology: edge, gateway, service, queue, cache, database, observability, change-log, and approval-gate layers. Multiple specialist agents fan out in parallel during evidence collection, then converge into a serial RCA synthesis and approval boundary.
 
 ## OpenAI fit
 
@@ -92,4 +97,4 @@ This public repository keeps the model adapter mocked so the project can be revi
 
 ## Demo status
 
-This is a frontend-only public demo. The model adapter, production tool registry, and approval workflow are represented as design contracts rather than live integrations.
+This is a frontend-only public demo. The model adapter, production tool registry, and approval workflow are represented as design contracts rather than live integrations. The demo is read-only and advisory; it does not connect to production systems or execute changes.

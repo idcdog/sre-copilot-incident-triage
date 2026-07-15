@@ -34,7 +34,7 @@
             actions stay behind explicit human approval.
           </p>
           <div class="hero-actions">
-            <a class="primary-action" href="#blueprint">Explore blueprint</a>
+            <a class="primary-action" href="#mission-control">Run RCA mission</a>
             <span>All signals are built-in mock data</span>
           </div>
         </div>
@@ -63,6 +63,48 @@
             </div>
           </dl>
         </aside>
+      </section>
+
+      <section id="mission-control" class="section mission-section">
+        <div class="section-head">
+          <p class="section-kicker">RCA mission control</p>
+          <h2>Agents investigate a common production topology</h2>
+          <p>
+            A synthetic incident moves through serial and parallel investigation
+            phases. Specialist agents collect read-only evidence from a typical
+            company stack, then the control plane gates any production-changing
+            action behind human approval.
+          </p>
+        </div>
+
+        <div class="mission-layout">
+          <section class="topology-stage" aria-label="Animated production topology">
+            <canvas id="topology-canvas"></canvas>
+            <div id="topology-fallback" class="topology-fallback" hidden>
+              Three.js is unavailable or motion is reduced. The RCA flow remains
+              available in the stage timeline and agent panels.
+            </div>
+            <div class="stage-overlay">
+              <p class="section-kicker">Active phase</p>
+              <h3 id="active-stage-title">Initializing RCA mission</h3>
+              <p id="active-stage-copy">
+                Loading synthetic company topology and agent workflow.
+              </p>
+            </div>
+          </section>
+
+          <aside class="mission-panel">
+            <div>
+              <p class="section-kicker">Agent roles</p>
+              <div id="agent-roster" class="agent-roster"></div>
+            </div>
+
+            <div>
+              <p class="section-kicker">Investigation phases</p>
+              <div id="stage-timeline" class="stage-timeline"></div>
+            </div>
+          </aside>
+        </div>
       </section>
 
       <section id="blueprint" class="section blueprint-section">
@@ -113,7 +155,6 @@
       </footer>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
-
