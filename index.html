@@ -7,38 +7,110 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="hero">
-        <p class="eyebrow">OpenAI Build Week · Public-safe demo</p>
-        <h1>SRE Copilot for evidence-driven incident triage</h1>
-        <p class="lede">
-          A mock AI workflow that converts alerts, logs, traces, metrics, and
-          change history into an auditable incident brief, candidate RCA
-          hypotheses, data gaps, and human-approved next steps.
-        </p>
-      </section>
+    <main class="page">
+      <header class="topbar" aria-label="Site header">
+        <a class="brand" href="#top" aria-label="SRE Copilot home">
+          <span class="brand-mark">S</span>
+          <span>
+            <strong>SRE Copilot</strong>
+            <small>Evidence control plane</small>
+          </span>
+        </a>
+        <p class="status-line"><span></span> Public-safe demo · Synthetic data</p>
+        <a class="toplink" href="#replay">View RCA replay ↓</a>
+      </header>
 
-      <section class="layout">
-        <aside class="panel">
-          <h2>Incident</h2>
-          <dl id="incident-summary" class="summary"></dl>
-          <div class="notice">
-            This demo uses synthetic data only. No internal system names,
-            screenshots, logs, metrics, or company material are included.
+      <section id="top" class="hero">
+        <div class="hero-copy">
+          <p class="section-kicker">OpenAI Build Week · Developer Tools</p>
+          <h1>
+            Incident triage with
+            <em>evidence, boundaries, closure</em>
+          </h1>
+          <p class="lede">
+            A sanitized SRE copilot demo that transforms synthetic alerts, logs,
+            traces, metrics, and change history into an auditable evidence
+            package. The assistant can reason and recommend, while production
+            actions stay behind explicit human approval.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#blueprint">Explore blueprint</a>
+            <span>All signals are built-in mock data</span>
           </div>
+        </div>
+
+        <aside class="radar-card" aria-label="Demo readiness summary">
+          <div class="radar">
+            <span class="sweep"></span>
+            <span class="dot dot-a"></span>
+            <span class="dot dot-b"></span>
+            <span class="dot dot-c"></span>
+            <strong id="hero-confidence">--</strong>
+            <small>RCA confidence</small>
+          </div>
+          <dl class="radar-stats">
+            <div>
+              <dt>Evidence pipeline</dt>
+              <dd>Ready</dd>
+            </div>
+            <div>
+              <dt>Signal groups</dt>
+              <dd id="signal-count">--</dd>
+            </div>
+            <div>
+              <dt>Write policy</dt>
+              <dd>Approval on</dd>
+            </div>
+          </dl>
         </aside>
-
-        <section class="workspace">
-          <nav class="tabs" aria-label="Demo sections">
-            <button class="tab active" data-tab="evidence">Evidence</button>
-            <button class="tab" data-tab="causes">Candidate causes</button>
-            <button class="tab" data-tab="gaps">Data gaps</button>
-            <button class="tab" data-tab="safety">Safety boundary</button>
-          </nav>
-
-          <div id="content" class="content" aria-live="polite"></div>
-        </section>
       </section>
+
+      <section id="blueprint" class="section blueprint-section">
+        <div class="section-head">
+          <p class="section-kicker">Platform blueprint</p>
+          <h2>From noisy signals to controlled action</h2>
+          <p>
+            Select a layer to inspect its role in the synthetic incident
+            workflow. Model reasoning is separated from deterministic policy,
+            evidence tracking, and approval.
+          </p>
+        </div>
+
+        <div class="blueprint-layout">
+          <div class="node-map" id="node-map" aria-label="Architecture layers"></div>
+          <aside class="selected-panel" id="selected-panel" aria-live="polite"></aside>
+        </div>
+      </section>
+
+      <section id="replay" class="section replay-section">
+        <div class="section-head">
+          <p class="section-kicker">Guided RCA replay</p>
+          <h2>Follow the synthetic incident step by step</h2>
+        </div>
+
+        <div class="replay-layout">
+          <aside class="incident-card">
+            <p class="section-kicker">Synthetic incident</p>
+            <h3 id="incident-title">Loading incident…</h3>
+            <dl id="incident-summary" class="incident-summary"></dl>
+          </aside>
+
+          <section class="workspace">
+            <nav class="tabs" aria-label="Demo sections">
+              <button class="tab active" data-tab="evidence">01 Evidence</button>
+              <button class="tab" data-tab="causes">02 Causes</button>
+              <button class="tab" data-tab="gaps">03 Gaps</button>
+              <button class="tab" data-tab="safety">04 Boundary</button>
+            </nav>
+            <div id="content" class="content" aria-live="polite"></div>
+          </section>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>SRE Copilot · Interactive architecture demo</span>
+        <span>Sanitized · Local data · Zero external dependencies</span>
+      </footer>
     </main>
 
     <script src="app.js"></script>
