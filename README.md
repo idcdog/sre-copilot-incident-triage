@@ -43,7 +43,7 @@ http://localhost:8000
 
 You can also open `index.html` directly in a browser.
 
-The RCA mission-control view loads Three.js from a public CDN for the animated topology. If Three.js is unavailable or the user prefers reduced motion, the page falls back to the static stage timeline and agent panels.
+The RCA mission-control view loads Three.js on demand from public CDNs (unpkg with a jsdelivr fallback) for the animated topology. If both CDNs are unreachable, WebGL is unavailable, or the user prefers reduced motion, the page falls back to the static stage timeline and agent panels while the rest of the demo keeps working.
 
 For recording a deterministic Devpost walkthrough, open:
 

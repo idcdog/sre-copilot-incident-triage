@@ -53,7 +53,7 @@
             <span class="dot dot-b"></span>
             <span class="dot dot-c"></span>
             <strong id="hero-confidence">--</strong>
-            <small>RCA confidence</small>
+            <small>Evidence coverage</small>
           </div>
           <dl class="radar-stats">
             <div>
@@ -136,7 +136,7 @@
               <div
                 id="stage-timeline"
                 class="stage-timeline"
-                role="tablist"
+                role="group"
                 aria-label="RCA investigation phases"
               ></div>
             </div>
@@ -162,11 +162,15 @@
 
           <section class="simulation-card">
             <p class="section-kicker">Confidence model</p>
-            <h3 id="confidence-title">Evidence confidence</h3>
+            <h3 id="confidence-title">Evidence coverage</h3>
             <div class="confidence-meter">
               <strong id="confidence-score">--</strong>
-              <span>final confidence · capped below 100%</span>
+              <span>evidence coverage · capped below 100%</span>
             </div>
+            <p class="meta">
+              Measures how complete the evidence bundle is. Each candidate cause
+              carries its own hypothesis likelihood.
+            </p>
             <div id="confidence-factors" class="confidence-factors"></div>
           </section>
 

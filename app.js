@@ -1,4 +1,3 @@
-import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
 import { defaultScenarioId, scenarios } from "./data/scenarios.js";
 import { runbooks } from "./data/runbooks.js";
 
@@ -130,6 +129,9 @@ const setAutoplay = (enabled) => {
   const toggle = document.querySelector("#mission-play-toggle");
   if (!toggle) return;
 
+  // Autoplay never runs under reduced motion, so a pause toggle would be a
+  // dead control; hide it and let the stage timeline drive the mission.
+  toggle.hidden = state.reducedMotion;
   toggle.textContent = state.autoplay ? "Pause mission" : "Resume mission";
   toggle.setAttribute("aria-pressed", String(!state.autoplay));
 };
@@ -240,9 +242,11 @@ ${scenario.incident.summary}
 
 ${scenario.rca.candidateRootCause}
 
-## Confidence
+Hypothesis likelihood: ${Math.round((scenario.candidateCauses[0]?.confidence ?? 0) * 100)}% for the leading candidate cause.
 
-${confidence}% confidence, capped below 100% because data gaps are preserved.
+## Evidence coverage
+
+${confidence}% evidence coverage, capped below 100% because data gaps are preserved.
 
 ${scenario.confidenceModel.factors.map((factor) => `- ${factor.label}: ${factor.value > 0 ? "+" : ""}${factor.value}`).join("\n")}
 
@@ -406,6 +410,17 @@ const renderMissionPanels = () => {
     roster.append(card);
   }
 
+  const activateStage = (nextIndex, { focus = false } = {}) => {
+    setAutoplay(false);
+    clearSimulationTimers();
+    state.simulationStatus = "idle";
+    state.activeStage = nextIndex;
+    renderMissionPanels();
+    renderSimulationOutputs();
+    if (focus) document.querySelector(`#stage-${nextIndex + 1}`)?.focus();
+    window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: nextIndex } }));
+  };
+
   stages.forEach((stage, index) => {
     const button = createElement("button", "stage-step");
     button.type = "button";
@@ -415,21 +430,12 @@ const renderMissionPanels = () => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
     button.dataset.stageMode = stage.mode;
-    button.role = "tab";
-    button.setAttribute("aria-selected", String(index === state.activeStage));
-    button.setAttribute("aria-controls", "topology-canvas");
-    button.tabIndex = index === state.activeStage ? 0 : -1;
+    if (index === state.activeStage) button.setAttribute("aria-current", "step");
     button.classList.toggle("active", index === state.activeStage);
     button.append(createElement("span", null, stage.title));
     button.append(createElement("small", null, stage.mode));
     button.addEventListener("click", () => {
-      setAutoplay(false);
-      clearSimulationTimers();
-      state.simulationStatus = "idle";
-      state.activeStage = index;
-      renderMissionPanels();
-      renderSimulationOutputs();
-      window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index } }));
+      activateStage(index);
     });
     button.addEventListener("keydown", (event) => {
       const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
@@ -442,14 +448,7 @@ const renderMissionPanels = () => {
       if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = index === 0 ? lastIndex : index - 1;
       if (event.key === "Home") nextIndex = 0;
       if (event.key === "End") nextIndex = lastIndex;
-      setAutoplay(false);
-      clearSimulationTimers();
-      state.simulationStatus = "idle";
-      state.activeStage = nextIndex;
-      renderMissionPanels();
-      renderSimulationOutputs();
-      document.querySelector(`#stage-${nextIndex + 1}`)?.focus();
-      window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: nextIndex } }));
+      activateStage(nextIndex, { focus: true });
     });
     timeline.append(button);
   });
@@ -596,17 +595,54 @@ const startMissionAutoplay = () => {
   }, 5200);
 };
 
-const initializeTopology = () => {
-  const canvas = document.querySelector("#topology-canvas");
+const showTopologyFallback = () => {
   const fallback = document.querySelector("#topology-fallback");
+  const canvas = document.querySelector("#topology-canvas");
+  if (canvas) canvas.hidden = true;
+  if (fallback) fallback.hidden = false;
+};
+
+// Three.js is an enhancement, not a dependency: if every CDN fails the demo
+// must keep working through the stage timeline and agent panels.
+const loadThreeModule = async () => {
+  const sources = [
+    "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  ];
+
+  for (const source of sources) {
+    try {
+      return await import(source);
+    } catch {
+      // Try the next CDN before falling back to the static timeline.
+    }
+  }
+  return null;
+};
+
+const initializeTopology = async () => {
+  const canvas = document.querySelector("#topology-canvas");
   const stage = canvas?.parentElement;
 
   if (!canvas || !stage || state.reducedMotion) {
-    fallback.hidden = false;
+    showTopologyFallback();
     return;
   }
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const THREE = await loadThreeModule();
+  if (!THREE) {
+    showTopologyFallback();
+    return;
+  }
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  } catch {
+    // WebGL can be unavailable (headless, GPU blocklist); degrade quietly.
+    showTopologyFallback();
+    return;
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
 
   const scene = new THREE.Scene();
@@ -809,11 +845,13 @@ const renderCauses = (content, data) => {
     const card = createElement("article", "card cause-card");
     const header = createElement("div", "cause-header");
     const titleGroup = createElement("div");
-    const score = createElement("span", "score", `${Math.round(cause.confidence * 100)}%`);
+    const scoreGroup = createElement("div", "score-group");
 
+    scoreGroup.append(createElement("span", "score", `${Math.round(cause.confidence * 100)}%`));
+    scoreGroup.append(createElement("small", "score-label", "hypothesis likelihood"));
     titleGroup.append(createElement("p", "section-kicker", "Candidate cause"));
     titleGroup.append(createElement("h3", null, cause.label));
-    header.append(titleGroup, score);
+    header.append(titleGroup, scoreGroup);
     card.append(header);
     card.append(createElement("p", "meta", "Supporting evidence"));
     card.append(createList(cause.supportingEvidence));
@@ -883,7 +921,9 @@ const initialize = async () => {
   renderHeroStats(state.data);
   renderMissionPanels();
   renderSimulationOutputs();
-  initializeTopology();
+  // Fire-and-forget: topology is decorative, so its failure must never
+  // block scenario data, simulation, or the replay workspace.
+  initializeTopology().catch(showTopologyFallback);
   startMissionAutoplay();
   renderBlueprint();
   render();
