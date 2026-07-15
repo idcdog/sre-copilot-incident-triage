@@ -1,0 +1,19 @@
+{
+  "name": "sre-copilot-incident-triage",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "validate": "node scripts/validate-public-safety.mjs"
+  },
+  "keywords": [
+    "sre",
+    "incident-response",
+    "ai",
+    "devops",
+    "openai-build-week"
+  ],
+  "license": "MIT"
+}
+

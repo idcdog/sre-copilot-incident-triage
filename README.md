@@ -21,6 +21,9 @@ It intentionally excludes:
 - Synthetic incident evidence in `data/mock-incident.json`.
 - A Devpost draft in `docs/devpost-draft.md`.
 - A sanitization checklist in `docs/sanitization.md`.
+- Architecture notes in `docs/architecture.md`.
+- A model-output contract in `docs/model-contract.md`.
+- A local public-safety validation script in `scripts/validate-public-safety.mjs`.
 
 ## Run locally
 
@@ -37,6 +40,16 @@ http://localhost:8000
 ```
 
 You can also open `index.html` directly in a browser.
+
+## Validate public safety
+
+Run:
+
+```bash
+npm run validate
+```
+
+The validation checks for blocked file types, common secret patterns, personal email addresses, and accidental inclusion of media or presentation exports.
 
 ## Concept
 
@@ -60,3 +73,23 @@ In a full implementation, OpenAI models can help with:
 
 This public repository keeps the model adapter mocked so the project can be reviewed without credentials or private infrastructure.
 
+## Repository structure
+
+```text
+.
+├── app.js
+├── data/mock-incident.json
+├── docs/
+│   ├── architecture.md
+│   ├── devpost-draft.md
+│   ├── model-contract.md
+│   └── sanitization.md
+├── index.html
+├── package.json
+├── scripts/validate-public-safety.mjs
+└── styles.css
+```
+
+## Demo status
+
+This is a frontend-only public demo. The model adapter, production tool registry, and approval workflow are represented as design contracts rather than live integrations.

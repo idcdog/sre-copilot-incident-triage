@@ -21,12 +21,15 @@ The demo takes a synthetic incident bundle and produces:
 - candidate root-cause hypotheses with supporting and contradicting evidence;
 - confidence-limiting data gaps;
 - a safety boundary that separates read-only assistance from actions requiring human approval.
+- an architecture-style interface showing how the evidence control plane separates model reasoning from deterministic approval policy.
 
 ## How we built it
 
 This public demo is a dependency-free static web app using HTML, CSS, JavaScript, and a synthetic JSON evidence bundle.
 
 The full product direction is intended to use OpenAI models for evidence clustering, incident summarization, runbook retrieval, RCA drafting, and Codex-assisted integration work. The public repository keeps model calls mocked so reviewers do not need private credentials or infrastructure access.
+
+The repository also includes a public-safety validation script that checks for common secret patterns, personal email addresses, and blocked media or presentation files before publishing.
 
 ## OpenAI usage
 
@@ -47,6 +50,7 @@ The main challenge is not generating text. It is keeping the workflow auditable,
 - Clear safety model for SRE workflows.
 - Sanitized Devpost-ready project narrative.
 - No dependency on internal data, screenshots, systems, or credentials.
+- Architecture and model-contract documentation that explain how a real implementation can add OpenAI model calls while preserving approval boundaries.
 
 ## What is next
 
@@ -64,4 +68,3 @@ Before publishing:
 - do not attach internal presentation files or exports;
 - do not include real company, team, system, incident, metric, or customer names;
 - keep the repository private until final review is complete.
-
