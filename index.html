@@ -20,7 +20,14 @@
         <a class="toplink" href="#replay">View RCA replay ↓</a>
       </header>
 
-      <section id="top" class="hero">
+      <nav class="jump-nav" aria-label="Page sections">
+        <a href="#mission-control">Mission</a>
+        <a href="#blueprint">Blueprint</a>
+        <a href="#replay">Replay</a>
+        <a href="#content">Evidence</a>
+      </nav>
+
+      <section id="top" class="hero" data-section="hero">
         <div class="hero-copy">
           <p class="section-kicker">OpenAI Build Week · Developer Tools</p>
           <h1>
@@ -65,7 +72,7 @@
         </aside>
       </section>
 
-      <section id="mission-control" class="section mission-section">
+      <section id="mission-control" class="section mission-section" data-section="mission-control">
         <div class="section-head">
           <p class="section-kicker">RCA mission control</p>
           <h2>Agents investigate a common production topology</h2>
@@ -78,8 +85,20 @@
         </div>
 
         <div class="mission-layout">
-          <section class="topology-stage" aria-label="Animated production topology">
-            <canvas id="topology-canvas"></canvas>
+          <section class="topology-stage" aria-label="Animated production topology" data-agent-readable="true">
+            <figure class="topology-figure">
+              <canvas
+                id="topology-canvas"
+                aria-describedby="topology-text-summary"
+              ></canvas>
+              <figcaption id="topology-text-summary" class="sr-only">
+                Synthetic production topology showing Users, CDN, WAF, API
+                Gateway, Checkout API, Inventory, Payment, Message Bus, Worker,
+                Cache, Database, Object Store, Observability, Change Log, and
+                Approval Gate. Agents investigate read-only evidence first, then
+                approval-gated actions remain blocked until human approval.
+              </figcaption>
+            </figure>
             <div id="topology-fallback" class="topology-fallback" hidden>
               Three.js is unavailable or motion is reduced. The RCA flow remains
               available in the stage timeline and agent panels.
@@ -95,19 +114,29 @@
 
           <aside class="mission-panel">
             <div>
-              <p class="section-kicker">Agent roles</p>
+              <div class="panel-title-row">
+                <p class="section-kicker">Agent roles</p>
+                <button id="mission-play-toggle" class="text-control" type="button">
+                  Pause mission
+                </button>
+              </div>
               <div id="agent-roster" class="agent-roster"></div>
             </div>
 
             <div>
               <p class="section-kicker">Investigation phases</p>
-              <div id="stage-timeline" class="stage-timeline"></div>
+              <div
+                id="stage-timeline"
+                class="stage-timeline"
+                role="tablist"
+                aria-label="RCA investigation phases"
+              ></div>
             </div>
           </aside>
         </div>
       </section>
 
-      <section id="blueprint" class="section blueprint-section">
+      <section id="blueprint" class="section blueprint-section" data-section="blueprint">
         <div class="section-head">
           <p class="section-kicker">Platform blueprint</p>
           <h2>From noisy signals to controlled action</h2>
@@ -124,7 +153,7 @@
         </div>
       </section>
 
-      <section id="replay" class="section replay-section">
+      <section id="replay" class="section replay-section" data-section="replay">
         <div class="section-head">
           <p class="section-kicker">Guided RCA replay</p>
           <h2>Follow the synthetic incident step by step</h2>
@@ -138,16 +167,61 @@
           </aside>
 
           <section class="workspace">
-            <nav class="tabs" aria-label="Demo sections">
-              <button class="tab active" data-tab="evidence">01 Evidence</button>
-              <button class="tab" data-tab="causes">02 Causes</button>
-              <button class="tab" data-tab="gaps">03 Gaps</button>
-              <button class="tab" data-tab="safety">04 Boundary</button>
+            <nav class="tabs" aria-label="Demo sections" role="tablist">
+              <button
+                class="tab active"
+                data-tab="evidence"
+                id="tab-evidence"
+                role="tab"
+                aria-selected="true"
+                aria-controls="content"
+              >01 Evidence</button>
+              <button
+                class="tab"
+                data-tab="causes"
+                id="tab-causes"
+                role="tab"
+                aria-selected="false"
+                aria-controls="content"
+              >02 Causes</button>
+              <button
+                class="tab"
+                data-tab="gaps"
+                id="tab-gaps"
+                role="tab"
+                aria-selected="false"
+                aria-controls="content"
+              >03 Gaps</button>
+              <button
+                class="tab"
+                data-tab="safety"
+                id="tab-safety"
+                role="tab"
+                aria-selected="false"
+                aria-controls="content"
+              >04 Boundary</button>
             </nav>
-            <div id="content" class="content" aria-live="polite"></div>
+            <div
+              id="content"
+              class="content"
+              role="tabpanel"
+              aria-live="polite"
+              tabindex="0"
+            ></div>
           </section>
         </div>
       </section>
+
+      <script type="application/json" id="rca-demo-state">
+        {
+          "mode": "public-safe-demo",
+          "dataPolicy": "synthetic-only",
+          "executionPolicy": "read-only advisory demo; production-changing actions require human approval",
+          "topologyLayers": ["edge", "app", "service", "data", "control"],
+          "agentRoles": ["Domain Router", "Metrics Agent", "Trace Agent", "Log Agent", "Change Agent", "Policy Agent", "RCA Synthesizer"],
+          "workflow": ["alert-intake", "parallel-evidence-sweep", "correlate-suspect-path", "approval-boundary", "rca-handoff"]
+        }
+      </script>
 
       <footer class="footer">
         <span>SRE Copilot · Interactive architecture demo</span>

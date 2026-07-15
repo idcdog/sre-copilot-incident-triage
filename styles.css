@@ -57,6 +57,23 @@ button {
   font: inherit;
 }
 
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .page {
   width: min(1180px, calc(100% - 36px));
   margin: 0 auto;
@@ -141,6 +158,32 @@ button {
   border-bottom: 1px solid var(--line-strong);
   color: var(--text);
   font-size: 0.72rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 0 0;
+}
+
+.jump-nav a {
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  min-height: 44px;
+  padding: 13px 14px;
+  text-transform: uppercase;
+}
+
+.jump-nav a:hover {
+  border-color: var(--mint);
+  color: var(--mint);
 }
 
 .hero {
@@ -380,6 +423,12 @@ h3 {
   height: 100%;
 }
 
+.topology-figure {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+
 .topology-fallback {
   position: absolute;
   inset: 24px;
@@ -439,6 +488,30 @@ h3 {
   display: grid;
   align-content: start;
   gap: 22px;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.text-control {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--mint);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  padding: 8px 10px;
+  text-transform: uppercase;
+}
+
+.text-control:hover {
+  border-color: var(--mint);
 }
 
 .mission-panel > div,
@@ -781,6 +854,11 @@ h3 {
     justify-self: start;
   }
 
+  .brand,
+  .toplink {
+    min-height: 44px;
+  }
+
   .hero {
     gap: 36px;
     min-height: auto;
@@ -805,6 +883,11 @@ h3 {
 
   .topology-stage {
     min-height: 520px;
+  }
+
+  .panel-title-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .tab {

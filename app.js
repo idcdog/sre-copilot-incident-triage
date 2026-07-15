@@ -5,6 +5,8 @@ const state = {
   tab: "evidence",
   selectedNode: "control",
   activeStage: 0,
+  autoplay: true,
+  autoplayTimer: null,
   reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches
 };
 
@@ -161,6 +163,15 @@ const createElement = (tag, className, text) => {
   return element;
 };
 
+const setAutoplay = (enabled) => {
+  state.autoplay = enabled && !state.reducedMotion;
+  const toggle = document.querySelector("#mission-play-toggle");
+  if (!toggle) return;
+
+  toggle.textContent = state.autoplay ? "Pause mission" : "Resume mission";
+  toggle.setAttribute("aria-pressed", String(!state.autoplay));
+};
+
 const createList = (items) => {
   const list = createElement("ul", "evidence-list");
   for (const item of items) {
@@ -252,6 +263,8 @@ const renderMissionPanels = () => {
 
   for (const agent of agents) {
     const card = createElement("article", "agent-chip");
+    card.dataset.agentId = agent.id;
+    card.dataset.agentStage = agent.stage;
     card.classList.toggle("active", activeStage.activeAgents.includes(agent.id));
     card.style.setProperty("--agent-color", agent.color);
     card.append(createElement("span", "agent-dot"));
@@ -263,13 +276,41 @@ const renderMissionPanels = () => {
   rcaStages.forEach((stage, index) => {
     const button = createElement("button", "stage-step");
     button.type = "button";
+    button.id = `stage-${index + 1}`;
+    button.dataset.stageId = stage.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    button.dataset.stageMode = stage.mode;
+    button.role = "tab";
+    button.setAttribute("aria-selected", String(index === state.activeStage));
+    button.setAttribute("aria-controls", "topology-canvas");
+    button.tabIndex = index === state.activeStage ? 0 : -1;
     button.classList.toggle("active", index === state.activeStage);
     button.append(createElement("span", null, stage.title));
     button.append(createElement("small", null, stage.mode));
     button.addEventListener("click", () => {
+      setAutoplay(false);
       state.activeStage = index;
       renderMissionPanels();
       window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index } }));
+    });
+    button.addEventListener("keydown", (event) => {
+      const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
+      if (!keys.includes(event.key)) return;
+
+      event.preventDefault();
+      const lastIndex = rcaStages.length - 1;
+      let nextIndex = index;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = index === lastIndex ? 0 : index + 1;
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = index === 0 ? lastIndex : index - 1;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = lastIndex;
+      setAutoplay(false);
+      state.activeStage = nextIndex;
+      renderMissionPanels();
+      document.querySelector(`#stage-${nextIndex + 1}`)?.focus();
+      window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: nextIndex } }));
     });
     timeline.append(button);
   });
@@ -279,9 +320,16 @@ const renderMissionPanels = () => {
 };
 
 const startMissionAutoplay = () => {
+  setAutoplay(!state.reducedMotion);
+  const toggle = document.querySelector("#mission-play-toggle");
+  toggle?.addEventListener("click", () => {
+    setAutoplay(!state.autoplay);
+  });
+
   if (state.reducedMotion) return;
 
-  window.setInterval(() => {
+  state.autoplayTimer = window.setInterval(() => {
+    if (!state.autoplay) return;
     state.activeStage = (state.activeStage + 1) % rcaStages.length;
     renderMissionPanels();
     window.dispatchEvent(new CustomEvent("rca-stage-change", { detail: { index: state.activeStage } }));
@@ -352,6 +400,7 @@ const initializeTopology = () => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(node.x, node.y, node.z);
     mesh.userData = { node };
+    mesh.name = node.id;
     nodeMeshes.set(node.id, mesh);
     group.add(mesh);
 
@@ -552,8 +601,12 @@ const render = () => {
   renderers[state.tab](content, state.data);
 
   for (const tab of document.querySelectorAll(".tab")) {
+    const isActive = tab.dataset.tab === state.tab;
     tab.classList.toggle("active", tab.dataset.tab === state.tab);
+    tab.setAttribute("aria-selected", String(isActive));
+    tab.tabIndex = isActive ? 0 : -1;
   }
+  content.setAttribute("aria-labelledby", `tab-${state.tab}`);
 };
 
 const initialize = async () => {
@@ -571,6 +624,23 @@ const initialize = async () => {
     tab.addEventListener("click", () => {
       state.tab = tab.dataset.tab;
       render();
+    });
+    tab.addEventListener("keydown", (event) => {
+      const tabs = [...document.querySelectorAll(".tab")];
+      const index = tabs.indexOf(tab);
+      const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
+      if (!keys.includes(event.key)) return;
+
+      event.preventDefault();
+      let nextIndex = index;
+      const lastIndex = tabs.length - 1;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = index === lastIndex ? 0 : index + 1;
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = index === 0 ? lastIndex : index - 1;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = lastIndex;
+      state.tab = tabs[nextIndex].dataset.tab;
+      render();
+      tabs[nextIndex].focus();
     });
   }
 };
